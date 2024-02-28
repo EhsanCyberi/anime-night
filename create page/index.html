@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classy</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div class="all">
+        <label> قسمت انیمه : </label>
+        <input id="name" type="number" style="text-align: center;">
+        
+        <label> فصل انیمه : </label>
+        <input id="season" type="number" style="text-align: center;">
+
+        <label> اسم انیمه به فارسی : </label>
+        <input id="farsi" type="text">
+        
+        <label> اسم انیمه به انگلیسی : </label>
+        <input id="english" type="text">
+        <div class="flx">
+            <label> آی فریم : </label>
+            <svg id="icon" onclick="pasteClipboardText()" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+                <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1z"/>
+                <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0z"/>
+            </svg>
+        </div>
+        <textarea id="iframe" cols="10" rows="5"></textarea>
+        
+        <label> توضیحات </label>
+        <textarea id="description" cols="10" rows="5"></textarea>
+
+        <button id="button">دانلود</button>
+    </div>
+
+    <script src="./java.js"></script>
+</body>
+</html>
