@@ -30,4 +30,4 @@ button2.addEventListener('click', function() {
     button1.style.border = 'none'
 })
 
-activate();
+activate()
