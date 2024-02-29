@@ -18,8 +18,6 @@ button1.addEventListener('click', function activate() {
     button2.style.border = 'none'
 })
 
-activate()
-
 button2.addEventListener('click', function() {
     seasion2.style.display = 'flex';
     seasion1.style.display = 'none';
@@ -31,3 +29,5 @@ button2.addEventListener('click', function() {
     button1.style.backgroundColor = 'rgb(40, 40, 40)'
     button1.style.border = 'none'
 })
+
+activate()
