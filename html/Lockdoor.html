@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>وضعیت بلوک‌ها</title>
+<style>
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, sans-serif;
+    background: linear-gradient(160deg, #0f172a 0%, #1e293b 60%, #334155 100%);
+    color: #e2e8f0;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px 16px calc(24px + env(safe-area-inset-bottom));
+  }
+
+  .app-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: .5px;
+    color: #94a3b8;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .app-title span {
+    color: #38bdf8;
+  }
+
+  /* شبکه اصلی */
+  .grid {
+    display: flex;
+    flex-direction: column-reverse; /* پایین‌ترین ردیف اول در DOM ولی پایین نمایش داده می‌شه */
+    gap: 12px;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .row {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-start;
+    direction: rtl; /* چیدمان راست به چپ */
+  }
+
+  .row.single {
+    justify-content: flex-start; /* ۶۴ سمت راست */
+  }
+
+  /* باکس‌ها */
+  .box {
+    flex: 1 1 0;
+    aspect-ratio: 1 / 1;
+    border-radius: 18px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: linear-gradient(145deg, #1e293b, #0f172a);
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    user-select: none;
+    transition: transform .15s ease, box-shadow .2s ease, background .25s ease, border-color .25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .box:active {
+    transform: scale(0.95);
+  }
+
+  .box .num {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #64748b;
+    transition: color .25s ease;
+  }
+
+  .box .icon {
+    font-size: 1.7rem;
+    line-height: 1;
+    transition: transform .25s ease;
+  }
+
+  /* حالت باز (تیک سبز) */
+  .box.open {
+    background: linear-gradient(145deg, #064e3b, #022c22);
+    border-color: rgba(52, 211, 153, 0.45);
+    box-shadow:
+      0 0 0 1px rgba(52, 211, 153, 0.25),
+      0 6px 18px rgba(16, 185, 129, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .box.open .num {
+    color: #6ee7b7;
+  }
+
+  .box.open .icon {
+    transform: scale(1.05);
+  }
+
+  /* کوچک‌تر کردن فونت در صفحه‌های خیلی باریک */
+  @media (max-width: 340px) {
+    .box .num { font-size: 0.7rem; }
+    .box .icon { font-size: 1.4rem; }
+    .grid, .row { gap: 9px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="app-title">وضعیت بلوک‌های <span>مجتمع</span></div>
+
+  <div class="grid" id="grid"></div>
+
+<script>
+(function () {
+  const START = 49;
+  const END = 64;
+  const STORAGE_KEY = 'block_states_v1';
+
+  // ساخت آرایه اعداد از پایین به بالا، راست به چپ
+  const numbers = [];
+  for (let i = START; i <= END; i++) numbers.push(i);
+
+  // چون ۱۶ عدد داریم، از پایین به بالا ردیف‌های ۳تایی می‌چینیم
+  // آخرین عدد باقی‌مانده (۶۴) تنها در بالاترین ردیف سمت راست قرار می‌گیرد
+  const TOTAL = numbers.length;               // 16
+  const fullRows = Math.floor(TOTAL / 3);     // 5 ردیف کامل
+  const remainder = TOTAL % 3;                // 1 عدد باقی‌مانده
+
+  // تقسیم اعداد از پایین به بالا: هر ردیف ۳ عدد از ابتدای آرایه
+  const rowsBottomUp = [];
+  let idx = 0;
+  for (let r = 0; r < fullRows; r++) {
+    rowsBottomUp.push(numbers.slice(idx, idx + 3));
+    idx += 3;
+  }
+  // باقی‌مانده (۶۴) در بالاترین ردیف
+  if (remainder > 0) {
+    rowsBottomUp.push(numbers.slice(idx));
+  }
+
+  // بارگذاری وضعیت ذخیره‌شده
+  let state = {};
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) state = JSON.parse(raw) || {};
+  } catch (e) {
+    state = {};
+  }
+
+  const grid = document.getElementById('grid');
+
+  // ساخت ردیف‌ها از پایین به بالا
+  rowsBottomUp.forEach((rowNums, rowIndex) => {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'row' + (rowNums.length === 1 ? ' single' : '');
+
+    rowNums.forEach(num => {
+      const box = document.createElement('div');
+      box.className = 'box';
+      box.dataset.num = num;
+
+      const isOpen = !!state[num];
+      if (isOpen) box.classList.add('open');
+
+      box.innerHTML = `
+        <div class="icon">${isOpen ? '✅' : '🔒'}</div>
+        <div class="num">${num}</div>
+      `;
+
+      box.addEventListener('click', () => {
+        const nowOpen = !box.classList.contains('open');
+        box.classList.toggle('open', nowOpen);
+        box.querySelector('.icon').textContent = nowOpen ? '✅' : '🔒';
+        state[num] = nowOpen;
+        saveState();
+      });
+
+      rowEl.appendChild(box);
+    });
+
+    grid.appendChild(rowEl);
+  });
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+      // در صورت خطا (مثلاً حالت خصوصی) بی‌صدا رد شو
+    }
+  }
+})();
+</script>
+</body>
+</html>
